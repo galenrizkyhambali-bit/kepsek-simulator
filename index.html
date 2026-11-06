@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kepsek Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.383.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{--b:#1d4ed8;--bl:#dbeafe;--y:#facc15;--t:#0f172a;--m:#64748b;--l:#e2e8f0;--r:#dc2626}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:14px/1.45 system-ui,sans-serif;background:#f1f5f9;color:var(--t)}
+#side{position:fixed;inset:0 auto 0 0;width:220px;background:#fff;border-right:1px solid var(--l);padding:12px 8px;overflow:auto;z-index:20;transition:transform .25s}
+#side h1{font-size:15px;color:var(--b);padding:6px 10px 12px}
+.nv{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--m);font-weight:500}
+.nv:hover{background:#f1f5f9}.nv.on{background:var(--bl);color:var(--b)}
+.nv svg,.card svg{width:16px;height:16px;vertical-align:middle}
+#main{margin-left:220px;padding:16px;min-height:100vh}
+#top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:14px}
+#mb{display:none}
+.card{background:#fff;border:1px solid var(--l);border-radius:12px;padding:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:14px}
+.st b{display:block;font-size:19px}.st span{color:var(--m);font-size:12px}
+.btn{border:0;background:var(--b);color:#fff;padding:6px 11px;border-radius:8px;cursor:pointer;font:inherit;font-size:13px}
+.btn.s{background:#e2e8f0;color:var(--t)}.btn.r{background:var(--r)}.btn.y{background:var(--y);color:#422006}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--l);white-space:nowrap}
+th{color:var(--m);font-weight:600;background:#f8fafc}
+.bar{height:7px;background:var(--l);border-radius:4px;overflow:hidden;margin:4px 0}.bar i{display:block;height:100%;background:var(--b)}
+#mod{position:fixed;inset:0;background:#0f172a99;display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+#mod>div{background:#fff;border-radius:14px;padding:18px;max-width:580px;width:100%;max-height:88vh;overflow:auto}
+#toast{position:fixed;right:12px;bottom:12px;z-index:60;display:flex;flex-direction:column;gap:6px}
+.to{background:#0f172a;color:#fff;padding:9px 14px;border-radius:8px;animation:in .25s;max-width:300px}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+.pg{animation:in .25s}
+label{display:block;font-size:12px;color:var(--m)}
+input,select{width:100%;padding:7px;border:1px solid var(--l);border-radius:8px;font:inherit;margin:3px 0 8px;color:var(--t)}
+h2{margin-bottom:10px;font-size:17px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tag{padding:2px 8px;border-radius:99px;font-size:11px;background:var(--bl);color:var(--b)}
+.cd{background:#fff;border:1px solid var(--l);border-radius:6px;padding:3px;min-height:52px;font-size:10px;overflow:hidden}
+.cd.off{background:#fef2f2}.cd.ex{background:#fef9c3}
+#w3{position:fixed;inset:0;z-index:40;background:#9fd0f5;touch-action:none;user-select:none}
+#w3 canvas{display:block;width:100%;height:100%}
+#hud3{position:absolute;top:10px;left:10px;background:#fffd;padding:6px 10px;border-radius:8px;font-size:13px}
+#ex3{position:absolute;top:10px;right:10px}
+#in3{position:absolute;right:24px;bottom:60px;width:72px;height:72px;border-radius:50%}
+#jz{position:absolute;left:24px;bottom:40px;width:120px;height:120px;border-radius:50%;background:#ffffff77;border:2px solid #fff;touch-action:none}
+#jz i{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:var(--b);opacity:.85}
+@media(max-width:800px){#side{transform:translateX(-100%)}#side.o{transform:none;box-shadow:0 0 30px #0004}#main{margin-left:0;padding:10px}#mb{display:inline-block}}
+</style></head><body>
+<nav id="side"><h1>🏫 KEPSEK SIMULATOR</h1><div id="nav"></div></nav>
+<div id="main">
+<div id="top"><div class="row" style="margin:0"><button class="btn s" id="mb" data-a="menu">☰</button><b id="ttl"></b></div>
+<div style="text-align:right"><div class="clk-d" style="font-size:12px;color:var(--m)"></div><b class="clk-t"></b></div></div>
+<div id="pg" class="pg"></div></div>
+<div id="mod"></div><div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s),K='kepsek_sim_v1',A={},P={};
+const SUBJ=['Matematika','Bahasa Indonesia','Bahasa Inggris','IPA','IPS','PPKn','PJOK','Seni Budaya','Pendidikan Agama','Informatika'];
+const FN=['Budi','Siti','Agus','Dewi','Rina','Hendra','Wahyu','Putri','Andi','Lestari','Fajar','Nur','Eko','Ratna','Dimas','Maya','Rizky','Sari','Bayu','Indah','Joko','Ayu','Tono','Wati'];
+const LN=['Santoso','Wijaya','Pratama','Hidayat','Nugroho','Saputra','Rahayu','Kusuma','Setiawan','Permata','Hakim','Utami'];
+const HARI=['Senin','Selasa','Rabu','Kamis','Jumat'],JAM=['07:00-07:40','07:40-08:20','08:20-09:00','09:20-10:00','10:00-10:40','10:40-11:20'];
+const MON=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+const LV=['Kepsek Pemula','Kepsek Junior','Kepsek Menengah','Kepsek Senior','Kepsek Profesional','Kepsek Legendaris'];
+const FAC={kelas:{n:'Ruang Kelas',c:25e6,d:5,i:'door-open'},perpus:{n:'Perpustakaan',c:30e6,d:6,i:'library'},labkom:{n:'Lab Komputer',c:45e6,d:8,i:'monitor'},labipa:{n:'Lab IPA',c:40e6,d:8,i:'flask-conical'},kantin:{n:'Kantin',c:20e6,d:4,i:'utensils'},lapangan:{n:'Lapangan Olahraga',c:35e6,d:7,i:'trophy'},toilet:{n:'Toilet',c:10e6,d:3,i:'bath'},guru:{n:'Ruang Guru',c:15e6,d:4,i:'users'},kepsek:{n:'Ruang Kepala Sekolah',c:12e6,d:3,i:'briefcase'},uks:{n:'UKS',c:10e6,d:3,i:'heart-pulse'},musala:{n:'Musala',c:18e6,d:4,i:'moon'},aula:{n:'Aula Sekolah',c:60e6,d:10,i:'landmark'},tu:{n:'Ruang Tata Usaha',c:12e6,d:3,i:'file-text'},bk:{n:'Ruang BK',c:10e6,d:3,i:'message-circle'}};
+const RI={ac:['AC',4e6],proj:['Proyektor',3.5e6],board:['Whiteboard',1.5e6],light:['Lampu LED',1e6],clean:['Bersihkan',2e5],fix:['Perbaiki',1.5e6]};
+const RULES={uni:{n:'Seragam rapi wajib (disiplin naik, kebahagiaan turun sedikit)',d:.1,h:-1},hp:{n:'Larangan HP di sekolah',d:.08,h:-2},tamb:{n:'Jam belajar tambahan',d:.05,h:-3}};
+const ACT={up:{n:'Upacara & Pramuka',c:1e6,hp:4,rep:.2},ob:{n:'Class Meeting',c:2e6,hp:8,rep:.2},sos:{n:'Bakti Sosial',c:1e6,hp:5,rep:.3},pen:{n:'Pentas Seni',c:5e6,hp:10,rep:.6},tour:{n:'Study Tour',c:15e6,hp:15,rep:1},lomba:{n:'Ikut Lomba Akademik',c:3e6,hp:4,rep:.2}};
+const POS=[...SUBJ.map(s=>['m:'+s,'Guru '+s]),['r:Guru BK','Guru BK'],['r:Kepala Tata Usaha','Kepala Tata Usaha'],['r:Petugas Kebersihan','Petugas Kebersihan'],['r:Satpam','Satpam'],['r:Wakil Kepala Sekolah','Wakil Kepala Sekolah']];
+const MENU=[['dash','Dashboard','layout-dashboard'],['kls','Manajemen Kelas','school'],['sis','Data Siswa','graduation-cap'],['gur','Data Guru','users'],['jdw','Jadwal Pelajaran','calendar-clock'],['akd','Akademik','book-open'],['bgn','Pembangunan','hammer'],['keu','Keuangan','wallet'],['evt','Event Sekolah','sparkles'],['cal','Kalender Akademik','calendar-days'],['ach','Achievement','award'],['d3','Jelajah 3D','box'],['set','Pengaturan','settings']];
+let S,page='dash',selC=null,fC='all',calM=null,CAND=[],AC=null,acc=0;
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[rnd(0,a.length-1)],nm=()=>pick(FN)+' '+pick(LN);
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v)),rp=n=>'Rp'+Math.round(n).toLocaleString('id-ID');
+const avg=(a,f)=>a.length?a.reduce((x,y)=>x+f(y),0)/a.length:0,pb=v=>`<div class="bar"><i style="width:${clamp(v)}%"></i></div>`;
+const cls=id=>S.classes.find(c=>c.id===id),T=id=>S.teachers.find(t=>t.id===id),stu=id=>S.students.filter(s=>s.cls===id),uid=()=>S.nid++;
+const sid=p=>S.students.find(s=>s.id===+p),icons=()=>{try{lucide.createIcons()}catch(e){}};
+const dstr=iso=>new Date(iso+'T00:00:00Z').toLocaleDateString('id-ID',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const guruList=()=>S.teachers.filter(t=>t.sub!=='-'&&t.act);
+/* ===== JAM WIB ASLI ===== */
+const FD=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jakarta',weekday:'long',day:'numeric',month:'long',year:'numeric'}),FT=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jakarta',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
+function clock(){const n=new Date(),t=FT.formatToParts(n).filter(p=>p.type!=='literal').map(p=>p.value).join(':');document.querySelectorAll('.clk-t').forEach(e=>e.textContent=t+' WIB');document.querySelectorAll('.clk-d').forEach(e=>e.textContent=FD.format(n))}
+/* ===== UI HELPERS ===== */
+function toast(t){const e=document.createElement('div');e.className='to';e.textContent=t;$('#toast').append(e);setTimeout(()=>e.remove(),3200)}
+function snd(f=520){if(!S||!S.snd)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.frequency.value=f;g.gain.value=.04;o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+.07)}catch(e){}}
+function modal(h){const m=$('#mod');m.innerHTML='<div>'+h+'</div>';m.style.display='flex';icons()}
+function close(){$('#mod').style.display='none'}
+function done(){chkAch();render();save()}
+function ask(title,F,fn,ok='Simpan'){modal(`<h2>${title}</h2>${F.map(f=>`<label>${f.l}${f.t==='select'?`<select id="f_${f.k}">${f.o.map(o=>`<option value="${o[0]}" ${o[0]==f.v?'selected':''}>${o[1]}</option>`).join('')}</select>`:`<input id="f_${f.k}" type="${f.t||'text'}" value="${f.v??''}">`}</label>`).join('')}<div class="row"><button class="btn" id="okb">${ok}</button><button class="btn s" data-a="x">Batal</button></div>`);
+$('#okb').onclick=()=>{const v={};F.forEach(f=>{const e=$('#f_'+f.k);v[f.k]=f.t==='number'?+e.value:e.value});if(fn(v)!==false){close();done()}}}
+function conf(msg,fn){modal(`<h2>Konfirmasi</h2><p style="margin-bottom:14px">${msg}</p><div class="row"><button class="btn r" id="okb">Ya, lanjutkan</button><button class="btn s" data-a="x">Batal</button></div>`);$('#okb').onclick=()=>{close();fn();done()}}
+/* ===== DATA ===== */
+function mkT(sub,role){const g=Math.random()<.5?'L':'P',sk=rnd(50,85),av={'Petugas Kebersihan':'🧹','Satpam':'💂','Kepala Tata Usaha':'🗂️','Guru BK':'🧑‍🏫','Wakil Kepala Sekolah':'👔'}[role]||(g==='L'?'👨‍🏫':'👩‍🏫');return{id:uid(),name:nm()+(sub!=='-'?', S.Pd.':''),sub,role,age:rnd(24,55),g,sal:Math.round((3e6+sk*30000+rnd(0,3)*1e5)/1e5)*1e5,skill:sk,disc:rnd(60,90),act:true,av}}
+function mkS(c){return{id:uid(),name:nm(),g:Math.random()<.5?'L':'P',cls:c,nilai:rnd(60,82),disc:rnd(60,92),hadir:rnd(90,99),role:'',ach:[]}}
+function mkC(n,lv,cap){const c={id:uid(),name:n,lv,cap,open:true,wali:null,room:{no:101+S.rc++,ac:0,proj:0,board:0,light:0,clean:90,cond:100}};S.classes.push(c);return c}
+const blank=()=>Array.from({length:5},()=>Array(6).fill(null)),sch=id=>S.sch[id]||(S.sch[id]=blank());
+function newGame(){S={school:'SMP Harapan Bangsa',kepsek:'Kepala Sekolah',money:1e8,rep:50,happy:75,ortu:70,fee:150000,date:'2026-07-13',nid:1,rc:0,day:0,classes:[],students:[],teachers:[],sch:{},fac:{},build:[],tx:[],fin:[],log:[],ach:{},pool:6,tunj:true,snd:true,spd:20,tut:true,pend:null,cd:{bos:-99},rules:{},lulus:0,lv:1};
+for(const k in FAC)S.fac[k]={lv:0,cond:100};Object.assign(S.fac.kelas,{lv:3});['toilet','guru','kepsek','tu'].forEach(k=>S.fac[k].lv=1);
+['Matematika','Bahasa Indonesia','Bahasa Inggris','IPA','IPS'].forEach(s=>S.teachers.push(mkT(s,'Guru Mata Pelajaran')));
+['Petugas Kebersihan','Satpam','Kepala Tata Usaha'].forEach(r=>S.teachers.push(mkT('-',r)));
+['7A','7B','7C'].forEach((n,i)=>{const c=mkC(n,7,32);c.wali=S.teachers[i].id;for(let j=0;j<10;j++)S.students.push(mkS(c.id))});
+autoSch();note('Selamat datang di KEPSEK SIMULATOR! Semoga sukses memimpin sekolah.')}
+function note(t){S.log.unshift(dstr(S.date)+' — '+t);if(S.log.length>40)S.log.pop()}
+function tx(t,amt,cat){S.money+=amt;S.tx.unshift({d:S.date,t,a:amt,c:cat});if(S.tx.length>150)S.tx.pop();const m=S.date.slice(0,7);let f=S.fin.find(x=>x.m===m);if(!f){f={m,i:0,o:0};S.fin.push(f);if(S.fin.length>12)S.fin.shift()}amt>0?f.i+=amt:f.o-=amt}
+function spend(c,t,cat){if(S.money<c){toast('Uang sekolah tidak cukup!');return false}tx(t,-c,cat);return true}
+function fx(o){if(o.m)tx(o.m>0?'Dana event':'Biaya event',o.m,'Event');if(o.rep)S.rep=clamp(S.rep+o.rep);if(o.hp)S.happy=clamp(S.happy+o.hp);if(o.or)S.ortu=clamp(S.ortu+o.or)}
+function delT(id){S.teachers=S.teachers.filter(t=>t.id!==id);S.classes.forEach(c=>{if(c.wali===id)c.wali=null});slotsOut(id)}
+function slotsOut(id){for(const k in S.sch)S.sch[k].forEach(d=>d.forEach((s,i)=>{if(s&&s.t===id)d[i]=null}))}
+const load=id=>{let n=0;for(const k in S.sch)S.sch[k].forEach(d=>d.forEach(s=>{if(s&&s.t===id)n++}));return n};
+const eff=t=>clamp(t.skill-Math.max(0,load(t.id)-25)*1.5),qual=()=>avg(guruList(),eff);
+const roomScore=c=>{const r=c.room;return Math.round((r.ac?18:8)+(r.proj?12:0)+(r.board?8:3)+(r.light?10:5)+r.cond*.3+r.clean*.2)};
+const ruleSum=k=>Object.keys(S.rules).filter(r=>S.rules[r]).reduce((x,r)=>x+RULES[r][k],0);
+const score=()=>S.rep+Object.keys(S.ach).length*2+S.students.length/10+Object.values(S.fac).reduce((x,f)=>x+f.lv,0)/3;
+const level=()=>{const s=score();return[0,60,72,85,100,120].filter(x=>s>=x).length},rankK=()=>Math.max(1,Math.round(50-(score()-45)*.8)),rankN=()=>Math.max(1,Math.round(3000-(score()-45)*30));
+function conflict(t,d,sl,exc){return S.classes.some(c=>c.id!==exc&&S.sch[c.id]&&S.sch[c.id][d][sl]&&S.sch[c.id][d][sl].t===t)}
+function autoSch(){S.classes.filter(c=>c.open).forEach(c=>{S.sch[c.id]=blank();let i=0;for(let d=0;d<5;d++)for(let sl=0;sl<6;sl++){for(let k=0;k<SUBJ.length;k++){const sub=SUBJ[(i++)%SUBJ.length],ts=guruList().filter(t=>t.sub===sub&&!conflict(t.id,d,sl,c.id)).sort((a,b)=>load(a.id)-load(b.id));if(ts.length){S.sch[c.id][d][sl]={s:sub,t:ts[0].id};break}}}})}
+/* ===== KALENDER & WAKTU SIMULASI ===== */
+function dayInfo(d){const m=d.getUTCMonth()+1,k=m*100+d.getUTCDate(),w=d.getUTCDay(),H={101:'Tahun Baru',501:'Hari Buruh',601:'Hari Pancasila',817:'HUT RI',1225:'Natal'};let off=1,label,ex=0;
+if(H[k])label=H[k];else if(k>=1222||k<=103||(k>=622&&k<=711))label='Libur Semester';else if(w%6===0)label='Akhir Pekan';else{off=0;label='Belajar';if((k>=928&&k<=1002)||(k>=302&&k<=306)){ex=1;label='UTS'}else if((k>=1207&&k<=1211)||(k>=608&&k<=612)){ex=2;label='UAS'}}
+const tag=({713:'Tahun Ajaran Baru',1028:'Sumpah Pemuda',1125:'Hari Guru',502:'Hardiknas'})[k]||(k>=601&&k<=620?'PPDB':'');return{off,label,ex,tag}}
+function nextOf(f){const d=new Date(S.date+'T00:00:00Z');for(let i=0;i<400;i++){d.setUTCDate(d.getUTCDate()+1);const I=dayInfo(d);if(f(I))return dstr(d.toISOString().slice(0,10))+' ('+(I.tag||I.label)+')'}return '-'}
+function promote(s){const c=cls(s.cls);if([6,9,12].includes(c.lv)){if(s.nilai<55)return'tl';S.students=S.students.filter(x=>x!==s);S.lulus++;S.rep=clamp(S.rep+.05);return'lulus'}
+const t=S.classes.filter(k=>k.open&&k.lv===c.lv+1&&stu(k.id).length<k.cap).sort((a,b)=>stu(a.id).length-stu(b.id).length)[0];if(!t)return'nc';s.cls=t.id;s.role='';return'ok'}
+function promAll(){const r={ok:0,lulus:0,tl:0,nc:0};[...S.students].sort((a,b)=>cls(b.cls).lv-cls(a.cls).lv).forEach(s=>r[promote(s)]++);return r}
+function nextDay(){const d=new Date(S.date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+1);S.date=d.toISOString().slice(0,10);S.day++;const I=dayInfo(d);
+if(S.date.slice(5)==='07-13'){const r=promAll();S.pool+=10;S.teachers.forEach(t=>t.age++);toast('🎓 Tahun ajaran baru! Lulus '+r.lulus+', naik '+r.ok);note('Tahun ajaran baru: '+r.lulus+' lulus, '+r.ok+' naik kelas, '+r.tl+' tidak lulus')}
+if(d.getUTCDate()===1)monthly();
+S.build=S.build.filter(b=>{if(--b.left>0)return true;const f=S.fac[b.k];f.lv++;f.cond=100;S.rep=clamp(S.rep+(b.k==='kelas'?.3:.8));toast('✅ '+FAC[b.k].n+' selesai');note(FAC[b.k].n+' selesai (level '+f.lv+')');return false});
+for(const k in S.fac){const f=S.fac[k];if(f.lv)f.cond=clamp(f.cond-(.15+.1*f.lv)*Math.random()*2)}
+const cl=S.teachers.filter(t=>t.act&&t.role==='Petugas Kebersihan').length;S.classes.forEach(c=>{c.room.cond=clamp(c.room.cond-Math.random()*.5);c.room.clean=clamp(c.room.clean-.8/(1+cl))});
+S.teachers.forEach(t=>{if(!t.act)return;if(load(t.id)>25){t.skill=clamp(t.skill-.03);t.disc=clamp(t.disc-.05)}t.sal<3e6+t.skill*25000?t.disc=clamp(t.disc-.03):t.disc=clamp(t.disc+.01)});
+if(!I.off){const q=qual(),lab=S.fac.labkom.lv*2+S.fac.labipa.lv*2+S.fac.perpus.lv*1.5,rd=ruleSum('d'),mt=avg(S.teachers.filter(t=>t.act),t=>t.disc);
+S.classes.forEach(c=>{const ss=stu(c.id),cm=roomScore(c),ov=ss.length>c.cap;ss.forEach(s=>{s.hadir=clamp(s.hadir+(cm-50)/250+(S.happy-60)/300+rnd(-10,10)/25-(ov?.3:0),50,100);s.disc=clamp(s.disc+rd+(mt-60)/500+rnd(-8,8)/25,20,100);if(I.ex)s.nilai=clamp(s.nilai*.8+.2*clamp(35+q*.35+s.disc*.12+cm*.15+lab+rnd(-6,6),30,98),20,100)})});
+const key=I.label+S.date.slice(0,7);if(I.ex&&S.exk!==key){S.exk=key;toast('📝 '+I.label+' dimulai');note(I.label+' dimulai, rata-rata nilai '+avg(S.students,s=>s.nilai).toFixed(1))}
+if(!S.pend&&Math.random()<.12)trigger()}
+S.pool+=I.tag==='PPDB'?rnd(0,Math.ceil(S.rep/15)):(Math.random()<.1?rnd(0,2):0);
+drift();if(S.money<5e6&&(+S.date.slice(8))%7===0)toast('⚠️ Uang sekolah hampir habis!')}
+function drift(){const an=avg(S.students,s=>s.nilai),fc=Object.values(S.fac).filter(f=>f.lv),ac=avg(fc,f=>f.cond)||70,ov=S.classes.filter(c=>stu(c.id).length>c.cap).length/Math.max(1,S.classes.length),F=S.fac;
+const tg=62+F.kantin.lv*5+F.lapangan.lv*5+F.toilet.lv*3+F.uks.lv*2+F.musala.lv*2+F.aula.lv*2-ov*15+ruleSum('h');S.happy=clamp(S.happy+(tg-S.happy)/30);
+S.ortu=clamp(S.ortu+((120-S.fee/3000+(S.rep-50)/5)-S.ortu)/30);
+S.rep=clamp(S.rep+(an-68)/400+(S.happy-65)/600+(S.ortu-60)/800+(ac-70)/1500-(S.money<0?.3:0))}
+function monthly(){const a=S.students.length,sal=S.teachers.filter(t=>t.act).reduce((x,t)=>x+t.sal,0);
+tx('SPP ('+a+' siswa)',a*S.fee,'SPP');tx('Dana BOS',a*25000,'Bantuan');if(S.fac.kantin.lv)tx('Pendapatan kantin',S.fac.kantin.lv*a*12000,'Kantin');if(Math.random()<S.rep/200)tx('Donasi orang tua/alumni',rnd(1,5)*1e6,'Donasi');
+tx('Gaji guru & staf',-sal,'Gaji');if(S.tunj)tx('Tunjangan wali kelas',-S.classes.filter(c=>c.wali).length*3e5,'Gaji');
+tx('Listrik & air',-(1.5e6+S.classes.length*25e4+S.classes.filter(c=>c.room.ac).length*3e5),'Operasional');tx('Perawatan rutin',-Object.values(S.fac).reduce((x,f)=>x+f.lv*1e5,0),'Perawatan');
+note('Laporan bulanan: saldo '+rp(S.money));toast('💰 Laporan bulanan diproses');if(S.money<0)toast('❗ Saldo minus! Reputasi turun.')}
+/* ===== EVENT ACAK ===== */
+const addA=(id,t)=>{const s=sid(id);if(s)s.ach.push(t+' ('+S.date.slice(0,4)+')')};
+const EVT=[
+['Guru Ingin Mengundurkan Diri',()=>guruList().length>1,()=>{const t=pick(guruList());return{t:t.id,x:t.name+' ('+t.sub+') ingin mengundurkan diri karena merasa gajinya kurang.'}},[['Naikkan gaji 20%',d=>{const t=T(d.t);if(t){t.sal=Math.round(t.sal*1.2);t.disc=clamp(t.disc+5)}return'Guru bertahan.'}],['Izinkan mundur',d=>{delT(d.t);fx({hp:-2});return'Guru pergi, segera cari pengganti.'}]]],
+['Siswa Berprestasi',()=>S.students.length,()=>{const s=pick(S.students);return{s:s.id,x:s.name+' juara lomba tingkat kota!'}},[['Beri hadiah Rp1 juta',d=>{if(!spend(1e6,'Hadiah siswa berprestasi','Event'))return'Dana kurang.';fx({rep:1,hp:3});addA(d.s,'Juara lomba kota');return'Reputasi naik!'}],['Apresiasi lisan',d=>{fx({rep:.4});addA(d.s,'Juara lomba kota');return'Siswa senang.'}]]],
+['Pelanggaran Siswa',()=>S.students.length,()=>{const s=pick(S.students);return{s:s.id,x:s.name+' kedapatan membolos dan melanggar tata tertib.'}},[['Panggil orang tua & bina',d=>{const s=sid(d.s);if(s)s.disc=clamp(s.disc+8);fx({or:-1});return'Siswa dibina.'}],['Skorsing',d=>{const s=sid(d.s);if(s)s.disc=clamp(s.disc+15);fx({hp:-4,or:-3});return'Disiplin naik, suasana tegang.'}],['Abaikan',d=>{const s=sid(d.s);if(s)s.disc=clamp(s.disc-5);fx({rep:-.5});return'Pelanggaran dibiarkan.'}]]],
+['Komplain Orang Tua',()=>S.students.length,()=>({x:'Sekelompok orang tua mengeluhkan biaya dan fasilitas sekolah.'}),[['Beri diskon SPP bulan ini',()=>{tx('Diskon SPP',-S.students.length*2e4,'Event');fx({or:6});return'Orang tua puas.'}],['Jelaskan kebijakan',()=>{fx({or:1});return'Sebagian puas.'}],['Abaikan',()=>{fx({or:-6,rep:-.6});return'Orang tua kecewa.'}]]],
+['Fasilitas Rusak',()=>1,()=>{const k=pick(Object.keys(FAC).filter(k=>S.fac[k].lv));return{k,x:FAC[k].n+' mengalami kerusakan.'}},[['Perbaiki segera (Rp5 juta)',d=>{if(!spend(5e6,'Perbaikan '+FAC[d.k].n,'Perawatan'))return'Dana kurang!';S.fac[d.k].cond=100;return'Selesai diperbaiki.'}],['Tunda',d=>{S.fac[d.k].cond=clamp(S.fac[d.k].cond-25);fx({hp:-3});return'Kondisi memburuk.'}]]],
+['Bantuan Dana Pemerintah',()=>1,()=>({x:'Sekolah mendapat bantuan dana pendidikan.'}),[['Terima & gunakan',()=>{fx({m:rnd(10,25)*1e6});return'Dana bantuan diterima.'}]]],
+['Inspeksi Dinas Pendidikan',()=>1,()=>({x:'Dinas Pendidikan akan melakukan inspeksi sekolah.'}),[['Sambut dengan persiapan',()=>{const ok=S.rep+avg(S.students,s=>s.nilai)/2>70;fx({rep:ok?1.5:-1.5,m:ok?1e7:0});return ok?'Lulus inspeksi + apresiasi dana!':'Ada catatan buruk dari dinas.'}]]],
+['Perselisihan Antarsiswa',()=>1,()=>({x:'Terjadi perselisihan antar siswa di halaman sekolah.'}),[['Mediasi guru BK',()=>{const bk=S.fac.bk.lv>0||S.teachers.some(t=>t.role==='Guru BK'&&t.act);fx({hp:bk?3:0,or:bk?1:-1});return bk?'Selesai damai.':'Tanpa BK hasilnya kurang baik.'}],['Beri sanksi tegas',()=>{fx({hp:-3,rep:.1});return'Disiplin naik, siswa kesal.'}]]],
+['Sekolah Memenangkan Lomba',()=>1,()=>({x:'Tim sekolah memenangkan lomba antar sekolah!'}),[['Rayakan (Rp2 juta)',()=>{if(!spend(2e6,'Syukuran lomba','Event'))return'Dana kurang.';fx({rep:1.5,hp:6});return'Perayaan meriah!'}],['Biasa saja',()=>{fx({rep:1});return'Reputasi naik.'}]]],
+['Guru Mendapat Penghargaan',()=>guruList().length,()=>{const t=pick(guruList());return{t:t.id,x:t.name+' mendapat penghargaan guru inspiratif.'}},[['Beri bonus Rp1 juta',d=>{if(!spend(1e6,'Bonus guru berprestasi','Event'))return'Dana kurang.';const t=T(d.t);if(t){t.skill=clamp(t.skill+2);t.disc=clamp(t.disc+4)}fx({rep:.8});return'Guru termotivasi!'}],['Sekadar ucapan',()=>{fx({rep:.3});return'Reputasi naik sedikit.'}]]]];
+function trigger(){const ok=EVT.map((e,i)=>i).filter(i=>EVT[i][1]());if(!ok.length)return;const i=pick(ok);S.pend={i,d:EVT[i][2]()};snd(300);showEv()}
+function showEv(){if(!S.pend)return;const e=EVT[S.pend.i];modal(`<h2>📢 ${e[0]}</h2><p style="margin-bottom:12px">${S.pend.d.x}</p>${e[3].map((o,j)=>`<button class="btn ${j?'s':''}" style="display:block;width:100%;margin-bottom:6px" data-a="ev" data-p="${j}">${o[0]}</button>`).join('')}`)}
+/* ===== ACHIEVEMENT ===== */
+const ACH=[['s100','Menerima 100 Siswa',()=>S.students.length>=100,{m:5e6}],['g20','Memiliki 20 Guru',()=>S.teachers.filter(t=>t.sub!=='-').length>=20,{m:5e6}],['k10','Membangun 10 Ruang Kelas',()=>S.fac.kelas.lv>=10,{m:8e6}],['r90','Reputasi 90',()=>S.rep>=90,{m:1e7,rep:1}],['fl','Fasilitas Lengkap',()=>Object.keys(FAC).every(k=>S.fac[k].lv>=1),{m:1.5e7,rep:2}],['lulus','Meluluskan Siswa Pertama',()=>S.lulus>0,{m:2e6,rep:.5}],['kaya','Saldo Rp500 Juta',()=>S.money>=5e8,{rep:1}],['kota','Sekolah Terbaik di Kota',()=>rankK()<=1,{m:3e7,rep:2}],['nas','Sekolah Unggulan Nasional',()=>rankN()<=100,{m:1e8,rep:3}]];
+function chkAch(){ACH.forEach(a=>{if(!S.ach[a[0]]&&a[2]()){S.ach[a[0]]=S.date;const r=a[3];if(r.m)tx('Hadiah achievement',r.m,'Achievement');if(r.rep)S.rep=clamp(S.rep+r.rep);toast('🏆 Achievement: '+a[1]);note('Achievement: '+a[1]);snd(800)}});const L=level();if(L>S.lv){S.lv=L;toast('🎉 Naik level: '+LV[L-1])}}
+/* ===== HALAMAN ===== */
+P.dash=()=>{const gur=S.teachers.filter(t=>t.sub!=='-').length,fc=Object.values(S.fac).filter(f=>f.lv),ac=Math.round(avg(fc,f=>f.cond)),c=(l,v,x='')=>`<div class="card st"><span>${l}</span><b>${v}</b>${x}</div>`;
+return `<div class="card" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;margin:0"><div><b style="font-size:18px">${S.school}</b><br><span class="tag">${LV[level()-1]}</span> ${S.kepsek}</div><div style="text-align:right"><div class="clk-d"></div><b class="clk-t" style="font-size:24px"></b><br><span style="color:var(--m);font-size:12px">Simulasi: ${dstr(S.date)}</span></div></div></div>
+${S.pend?'<div class="card" style="margin-bottom:12px;background:#fef9c3">Ada event menunggu keputusan <button class="btn y" data-a="showEv">Lihat</button></div>':''}
+<div class="grid">${c('Siswa',S.students.length)}${c('Guru & Staf',S.teachers.length+' ('+gur+' guru)')}${c('Ruang Kelas',S.classes.length+'/'+S.fac.kelas.lv)}${c('Uang Sekolah',rp(S.money))}${c('Reputasi',S.rep.toFixed(1)+'/100',pb(S.rep))}${c('Kebahagiaan Siswa',Math.round(S.happy)+'/100',pb(S.happy))}${c('Kepuasan Orang Tua',Math.round(S.ortu)+'/100',pb(S.ortu))}${c('Rata-rata Nilai',avg(S.students,s=>s.nilai).toFixed(1))}${c('Kondisi Fasilitas',ac+'%',pb(ac))}${c('Peringkat','Kota #'+rankK(),'<span>Nasional #'+rankN()+'</span>')}</div>
+<div class="row"><button class="btn" data-a="day">Hari Berikutnya ▶</button><button class="btn s" data-a="day" data-p="7">+7 Hari</button></div>
+<div class="card"><b>Notifikasi Terbaru</b>${S.log.slice(0,8).map(l=>'<div style="padding:4px 0;border-bottom:1px solid var(--l)">'+l+'</div>').join('')}</div>`};
+P.kls=()=>`<div class="row"><button class="btn" data-a="addC">+ Tambah Kelas</button><button class="btn s" data-a="tunj">Tunjangan wali: ${S.tunj?'Aktif':'Mati'}</button><span class="tag">Ruang ${S.classes.length}/${S.fac.kelas.lv}</span></div><div class="card tw"><table><tr><th>Kelas</th><th>Ruang</th><th>Wali Kelas</th><th>Siswa</th><th>Nilai</th><th>Disiplin</th><th>Hadir</th><th>Aksi</th></tr>${S.classes.map(c=>{const ss=stu(c.id),w=T(c.wali);return `<tr><td><b>${c.name}</b> ${c.open?'':'<span class="tag">Tutup</span>'}</td><td>${c.room.no}</td><td>${w?w.name:'-'}</td><td>${ss.length}/${c.cap}</td><td>${avg(ss,s=>s.nilai).toFixed(1)}</td><td>${Math.round(avg(ss,s=>s.disc))}%</td><td>${Math.round(avg(ss,s=>s.hadir))}%</td><td>${[['detC','Detail'],['edC','Edit'],['wali','Wali'],['opC',c.open?'Tutup':'Buka'],['delC','Hapus']].map(a=>`<button class="btn ${a[0]==='delC'?'r':'s'}" data-a="${a[0]}" data-p="${c.id}">${a[1]}</button>`).join(' ')}</td></tr>`}).join('')}</table></div>`;
+P.sis=()=>{const L=S.students.filter(s=>fC==='all'||s.cls==fC);return `<div class="row"><select style="width:auto;margin:0" data-ch="fC"><option value="all">Semua kelas</option>${S.classes.map(c=>`<option value="${c.id}" ${fC==c.id?'selected':''}>${c.name}</option>`).join('')}</select><button class="btn" data-a="newS">+ Terima Siswa Baru</button><span class="tag">Pendaftar: ${S.pool}</span><span class="tag">${L.length} siswa</span></div><div class="card tw"><table><tr><th>Nama</th><th>Kelas</th><th>Nilai</th><th>Disiplin</th><th>Hadir</th><th>Jabatan</th><th>Aksi</th></tr>${L.slice(0,80).map(s=>`<tr><td>${s.name}</td><td>${cls(s.cls)?cls(s.cls).name:'-'}</td><td>${s.nilai.toFixed(1)}</td><td>${Math.round(s.disc)}</td><td>${Math.round(s.hadir)}%</td><td>${s.role||'-'}</td><td>${[['profS','Profil'],['movS','Pindah'],['upS','Naik'],['ketS','Ketua'],['wakS','Wakil'],['delS','Keluar']].map(a=>`<button class="btn ${a[0]==='delS'?'r':'s'}" data-a="${a[0]}" data-p="${s.id}">${a[1]}</button>`).join(' ')}</td></tr>`).join('')}</table></div>${L.length>80?'<small>Menampilkan 80 siswa pertama, gunakan filter kelas.</small>':''}`};
+P.gur=()=>`<div class="row"><button class="btn" data-a="hire">+ Rekrut Guru/Staf</button><span class="tag">Total gaji: ${rp(S.teachers.filter(t=>t.act).reduce((x,t)=>x+t.sal,0))}/bulan</span></div><div class="card tw"><table><tr><th></th><th>Nama</th><th>Mapel</th><th>Jabatan</th><th>Usia</th><th>JK</th><th>Gaji</th><th>Mengajar</th><th>Disiplin</th><th>Jam</th><th>Status</th><th>Aksi</th></tr>${S.teachers.map(t=>`<tr><td>${t.av}</td><td>${t.name}</td><td>${t.sub}</td><td>${t.role}${S.classes.some(c=>c.wali===t.id)?' / Wali Kelas':''}</td><td>${t.age}</td><td>${t.g}</td><td>${rp(t.sal)}</td><td>${Math.round(t.skill)}</td><td>${Math.round(t.disc)}</td><td>${load(t.id)}</td><td>${t.act?'Aktif':'Nonaktif'}</td><td>${[['gaji','Gaji'],['jab','Jabatan'],['tgl',t.act?'Nonaktifkan':'Aktifkan'],['fire','Pecat']].map(a=>`<button class="btn ${a[0]==='fire'?'r':'s'}" data-a="${a[0]}" data-p="${t.id}">${a[1]}</button>`).join(' ')}</td></tr>`).join('')}</table></div>`;
+P.jdw=()=>{if(!cls(selC))selC=S.classes[0]&&S.classes[0].id;const c=cls(selC);if(!c)return'<div class="card">Belum ada kelas.</div>';const sc=sch(c.id);
+return `<div class="row"><select style="width:auto;margin:0" data-ch="selC">${S.classes.map(k=>`<option value="${k.id}" ${k.id===c.id?'selected':''}>${k.name}</option>`).join('')}</select><button class="btn" data-a="auto">Susun Otomatis</button><button class="btn s" data-a="clrS" data-p="${c.id}">Kosongkan Kelas</button></div><div class="card tw"><table><tr><th>Jam</th>${HARI.map(h=>'<th>'+h+'</th>').join('')}</tr>${JAM.map((j,i)=>`<tr><td>${j}</td>${[0,1,2,3,4].map(d=>{const x=sc[d][i],t=x&&T(x.t);return `<td><button class="btn s" data-a="slot" data-p="${d}:${i}">${x?x.s.slice(0,13)+'<br><small>'+(t?t.name.split(' ')[0]:'?')+'</small>':'+ isi'}</button></td>`}).join('')}</tr>`).join('')}</table></div><p style="margin-top:8px;color:var(--m)">Masuk 07:00 · Istirahat 09:00–09:20 · Pulang 11:20. Guru tidak boleh mengajar dua kelas di jam yang sama. Beban >25 jam/minggu menurunkan performa.</p>`};
+P.akd=()=>{const tp=[...S.students].sort((a,b)=>b.nilai-a.nilai).slice(0,5),c=(l,v)=>`<div class="card st"><span>${l}</span><b>${v}</b></div>`;
+return `<div class="grid">${c('Rata-rata Nilai',avg(S.students,s=>s.nilai).toFixed(1))}${c('Kehadiran',Math.round(avg(S.students,s=>s.hadir))+'%')}${c('Kedisiplinan',Math.round(avg(S.students,s=>s.disc))+'%')}${c('Kualitas Guru',Math.round(qual()))}${c('Peringkat Kota','#'+rankK())}${c('Peringkat Nasional','#'+rankN())}${c('Total Lulusan',S.lulus)}</div><div class="row"><button class="btn" data-a="tryout">Try Out (Rp2 jt)</button><button class="btn y" data-a="promAll">Naik Kelas / Kelulusan Massal</button></div><p style="margin-bottom:10px">Ujian berikutnya: ${nextOf(I=>I.ex)}<br>Kelulusan & naik kelas otomatis tiap 13 Juli (nilai kelas akhir ≥ 55 untuk lulus).</p>
+<div class="card"><b>Nilai per kelas</b>${S.classes.map(k=>{const v=avg(stu(k.id),s=>s.nilai);return `<div>${k.name}: ${v.toFixed(1)}${pb(v)}</div>`}).join('')}</div><div class="card" style="margin-top:12px"><b>Siswa Terbaik</b>${tp.map(s=>`<div>${s.name} — ${s.nilai.toFixed(1)}</div>`).join('')}</div>`};
+P.bgn=()=>`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">${Object.keys(FAC).map(k=>{const F=FAC[k],f=S.fac[k],b=S.build.find(x=>x.k===k),mx=k==='kelas'?30:3,cost=k==='kelas'?F.c:F.c*(f.lv+1);return `<div class="card"><i data-lucide="${F.i}"></i> <b>${F.n}</b><div>Level ${f.lv}${f.lv?' · Kondisi '+Math.round(f.cond)+'%':''}</div>${f.lv?pb(f.cond):''}${b?`<small>Dibangun: ${b.left} hari simulasi lagi</small>`:''}<div class="row" style="margin:8px 0 0"><button class="btn" data-a="bld" data-p="${k}" ${b||f.lv>=mx?'disabled':''}>${f.lv?(k==='kelas'?'Tambah':'Upgrade'):'Bangun'} ${rp(cost)}</button>${f.lv?`<button class="btn s" data-a="rwt" data-p="${k}">Rawat ${rp(F.c*.08)}</button>`:''}</div></div>`}).join('')}</div>`;
+function chart(){const a=S.fin.slice(-8);if(!a.length)return'<p>Belum ada data transaksi.</p>';const mx=Math.max(...a.map(x=>Math.max(x.i,x.o)),1);return `<svg viewBox="0 0 ${a.length*60} 130" style="width:100%;max-width:560px">${a.map((x,i)=>`<rect x="${i*60+8}" y="${110-x.i/mx*100}" width="20" height="${x.i/mx*100}" fill="#1d4ed8"/><rect x="${i*60+30}" y="${110-x.o/mx*100}" width="20" height="${x.o/mx*100}" fill="#facc15"/><text x="${i*60+8}" y="125" font-size="9">${x.m.slice(2)}</text>`).join('')}</svg><br><small>Biru: pemasukan · Kuning: pengeluaran</small>`}
+P.keu=()=>{const f=S.fin.find(x=>x.m===S.date.slice(0,7))||{i:0,o:0};return `<div class="grid"><div class="card st"><span>Saldo</span><b style="color:${S.money<0?'var(--r)':'inherit'}">${rp(S.money)}</b></div><div class="card st"><span>Pemasukan bulan ini</span><b>${rp(f.i)}</b></div><div class="card st"><span>Pengeluaran bulan ini</span><b>${rp(f.o)}</b></div><div class="card st"><span>Biaya pendidikan/bulan</span><b>${rp(S.fee)}</b></div></div>${S.money<5e6?'<div class="card" style="background:#fee2e2;margin-bottom:12px">⚠️ Uang sekolah hampir habis!</div>':''}<div class="row"><button class="btn" data-a="fee">Atur Biaya Pendidikan</button><button class="btn y" data-a="bos">Ajukan Proposal Dana Bantuan</button></div><div class="card" style="margin-bottom:12px"><b>Grafik Keuangan</b><br>${chart()}</div><div class="card tw"><b>Riwayat Transaksi</b><table><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jumlah</th></tr>${S.tx.slice(0,25).map(t=>`<tr><td>${t.d}</td><td>${t.t}</td><td>${t.c}</td><td style="color:${t.a<0?'var(--r)':'#16a34a'}">${rp(t.a)}</td></tr>`).join('')}</table></div>`};
+P.evt=()=>`${S.pend?'<div class="card" style="margin-bottom:12px;background:#fef9c3">Event menunggu keputusan <button class="btn y" data-a="showEv">Lihat</button></div>':''}<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${[['rapat','Rapat Guru','Rp500rb: guru lebih disiplin & terampil'],['keg','Kegiatan Sekolah','Naikkan kebahagiaan siswa'],['awG','Penghargaan Guru','Rp1 jt: skill & disiplin naik'],['awS','Penghargaan Siswa','Rp1 jt: nilai & prestasi naik']].map(a=>`<div class="card"><b>${a[1]}</b><p style="color:var(--m);margin:4px 0 8px">${a[2]}</p><button class="btn" data-a="${a[0]}">Lakukan</button></div>`).join('')}</div><div class="card"><b>Peraturan Sekolah</b>${Object.keys(RULES).map(k=>`<div class="row" style="margin:6px 0"><button class="btn ${S.rules[k]?'':'s'}" data-a="rule" data-p="${k}">${S.rules[k]?'Aktif':'Mati'}</button>${RULES[k].n}</div>`).join('')}</div><div class="card" style="margin-top:12px"><b>Riwayat Aktivitas</b>${S.log.map(l=>'<div style="padding:3px 0;border-bottom:1px solid var(--l)">'+l+'</div>').join('')}</div>`;
+P.cal=()=>{const ym=calM||S.date.slice(0,7),[Y,M]=ym.split('-').map(Number),n=new Date(Date.UTC(Y,M,0)).getUTCDate(),off=(new Date(Date.UTC(Y,M-1,1)).getUTCDay()+6)%7;let c='';for(let i=0;i<off;i++)c+='<div></div>';
+for(let d=1;d<=n;d++){const I=dayInfo(new Date(Date.UTC(Y,M-1,d))),cur=S.date===ym+'-'+String(d).padStart(2,'0');c+=`<div class="cd ${I.off?'off':''} ${I.ex?'ex':''}" style="${cur?'outline:2px solid var(--b)':''}"><b>${d}</b><br>${I.tag||I.label}</div>`}
+return `<div class="row"><button class="btn s" data-a="cm" data-p="-1">◀</button><b>${MON[M-1]} ${Y}</b><button class="btn s" data-a="cm" data-p="1">▶</button></div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">${['Sen','Sel','Rab','Kam','Jum','Sab','Min'].map(h=>`<b>${h}</b>`).join('')}${c}</div><p style="margin-top:10px;color:var(--m)">Merah: libur · Kuning: ujian (UTS/UAS) · PPDB: 1–20 Juni · Tahun ajaran baru: 13 Juli. Kotak biru = tanggal simulasi saat ini.<br>Ujian berikutnya: ${nextOf(I=>I.ex)} · PPDB berikutnya: ${nextOf(I=>I.tag==='PPDB')}</p>`};
+P.ach=()=>`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr))">${ACH.map(a=>`<div class="card" style="${S.ach[a[0]]?'border-color:var(--y)':''}">${S.ach[a[0]]?'🏆':'🔒'} <b>${a[1]}</b><br><small>Hadiah: ${a[3].m?rp(a[3].m):''} ${a[3].rep?'+'+a[3].rep+' reputasi':''}</small><br><small>${S.ach[a[0]]?'Diraih '+S.ach[a[0]]:'Belum diraih'}</small></div>`).join('')}</div>`;
+P.set=()=>`<div class="card"><div class="row"><button class="btn" data-a="ren" data-p="school">Ubah Nama Sekolah</button><button class="btn" data-a="ren" data-p="kepsek">Ubah Nama Kepsek</button></div><div class="row"><button class="btn s" data-a="sndT">Suara: ${S.snd?'Hidup':'Mati'}</button><label style="margin:0">Kecepatan waktu simulasi <select data-ch="spd"><option value="0" ${!S.spd?'selected':''}>Jeda (manual)</option><option value="20" ${S.spd==20?'selected':''}>1 hari / 20 detik</option><option value="10" ${S.spd==10?'selected':''}>1 hari / 10 detik</option><option value="5" ${S.spd==5?'selected':''}>1 hari / 5 detik</option></select></label></div><div class="row"><button class="btn" data-a="save">Save Game</button><button class="btn s" data-a="load">Load Game</button><button class="btn r" data-a="reset">Reset Game</button><button class="btn s" data-a="tut">Tutorial</button></div><p style="color:var(--m)">Auto-save aktif (LocalStorage). Jam digital mengikuti WIB asli; waktu simulasi berjalan sendiri untuk pembangunan, semester, dan event.</p></div>`;
+/* ===== AKSI ===== */
+A.x=close;A.menu=()=>$('#side').classList.toggle('o');
+A.go=p=>{page=p;$('#side').classList.remove('o');const e=$('#pg');e.classList.remove('pg');void e.offsetWidth;e.classList.add('pg')};
+A.day=p=>{for(let i=0;i<(+p||1);i++){if(S.pend)break;nextDay()}if(S.pend)showEv()};
+A.showEv=showEv;A.ev=j=>{const e=EVT[S.pend.i],m=e[3][+j][1](S.pend.d);S.pend=null;toast(m);note(e[0]+': '+m);close()};
+A.tunj=()=>{S.tunj=!S.tunj};A.cm=p=>{const[Y,M]=(calM||S.date.slice(0,7)).split('-').map(Number);calM=new Date(Date.UTC(Y,M-1+ +p,1)).toISOString().slice(0,7)};
+A.addC=()=>{if(S.classes.length>=S.fac.kelas.lv)return toast('Bangun ruang kelas dulu di menu Pembangunan');ask('Tambah Kelas (Rp2.000.000)',[{k:'lv',l:'Tingkat',t:'select',v:7,o:Array.from({length:12},(_,i)=>[i+1,'Kelas '+(i+1)+(i<6?' (SD)':i<9?' (SMP)':' (SMA)')])},{k:'h',l:'Huruf kelas',v:'D'},{k:'cap',l:'Kapasitas',t:'number',v:32}],v=>{const n=(+v.lv)+v.h.trim().toUpperCase();if(!v.h.trim()||S.classes.some(c=>c.name===n)){toast('Nama kelas kosong/sudah ada');return false}if(!spend(2e6,'Pembukaan kelas '+n,'Pembangunan'))return false;mkC(n,+v.lv,clamp(v.cap,10,45));toast('Kelas '+n+' dibuka')})};
+A.edC=i=>{const c=cls(+i);ask('Edit Kelas '+c.name,[{k:'n',l:'Nama kelas',v:c.name},{k:'cap',l:'Kapasitas maksimal',t:'number',v:c.cap}],v=>{const n=v.n.trim();if(!n||S.classes.some(k=>k.name===n&&k!==c)){toast('Nama tidak valid/sudah ada');return false}c.name=n;c.cap=clamp(v.cap,5,45)})};
+A.opC=i=>{const c=cls(+i);c.open=!c.open;toast('Kelas '+c.name+(c.open?' dibuka':' ditutup'))};
+A.delC=i=>{const c=cls(+i);if(stu(c.id).length)return toast('Pindahkan semua siswa dulu');conf('Hapus kelas '+c.name+'?',()=>{S.classes=S.classes.filter(k=>k!==c);delete S.sch[c.id]})};
+A.wali=i=>{const c=cls(+i),used=S.classes.filter(k=>k!==c&&k.wali).map(k=>k.wali);ask('Wali Kelas '+c.name,[{k:'t',l:'Pilih guru (satu guru hanya satu kelas)',t:'select',v:c.wali||0,o:[[0,'(Tanpa wali)'],...guruList().filter(t=>!used.includes(t.id)).map(t=>[t.id,t.name+' — '+t.sub])]}],v=>{c.wali=+v.t||null})};
+A.detC=i=>{const c=cls(+i),r=c.room,ss=stu(c.id),w=T(c.wali);modal(`<h2>Kelas ${c.name} · Ruang ${r.no}</h2><p style="margin-bottom:8px">Wali: ${w?w.name+' (kinerja: nilai kelas '+avg(ss,s=>s.nilai).toFixed(1)+')':'-'}<br>Meja & kursi: ${c.cap} set · Papan: ${r.board?'Whiteboard':'Biasa'} · Proyektor: ${r.proj?'Ada':'Tidak ada'} · Pendingin: ${r.ac?'AC':'Kipas angin'} · Lampu: ${r.light?'LED':'Biasa'}<br>Kebersihan ${Math.round(r.clean)}% · Kondisi ${Math.round(r.cond)}% · Kenyamanan ${roomScore(c)}/100</p><div class="row">${Object.keys(RI).map(k=>`<button class="btn s" data-a="room" data-p="${c.id}:${k}">${RI[k][0]} ${rp(RI[k][1])}</button>`).join('')}</div><b>Siswa (${ss.length})</b><div style="max-height:160px;overflow:auto">${ss.map(s=>s.name+(s.role?' ('+s.role+')':'')).join(', ')||'-'}</div><div class="row" style="margin-top:10px"><button class="btn s" data-a="x">Tutup</button></div>`)};
+A.room=p=>{const[i,k]=p.split(':'),c=cls(+i),r=c.room,[n,cost]=RI[k];if(['ac','proj','board','light'].includes(k)&&r[k])return toast(n+' sudah terpasang');if(!spend(cost,n+' ruang '+c.name,'Perlengkapan'))return;if(k==='clean')r.clean=100;else if(k==='fix')r.cond=100;else r[k]=1;toast(n+' berhasil');A.detC(i)};
+A.newS=()=>{const o=S.classes.filter(c=>c.open&&stu(c.id).length<c.cap);if(!o.length)return toast('Tidak ada kelas dengan kursi kosong');if(!S.pool)return toast('Belum ada pendaftar. Tunggu PPDB (Juni) atau naikkan reputasi');ask('Terima Siswa Baru (pendaftar: '+S.pool+')',[{k:'c',l:'Masukkan ke kelas',t:'select',o:o.map(c=>[c.id,c.name+' ('+stu(c.id).length+'/'+c.cap+')'])},{k:'n',l:'Jumlah',t:'number',v:5}],v=>{const c=cls(+v.c),n=Math.min(Math.max(1,v.n|0),S.pool,c.cap-stu(c.id).length);for(let i=0;i<n;i++)S.students.push(mkS(c.id));S.pool-=n;toast(n+' siswa diterima di '+c.name);note(n+' siswa baru diterima di '+c.name)})};
+A.profS=p=>{const s=sid(p),c=cls(s.cls);modal(`<h2>${s.name}</h2><p>${s.g==='L'?'Laki-laki':'Perempuan'} · Kelas ${c?c.name:'-'} ${s.role?'· '+s.role:''}<br>Nilai rata-rata ${s.nilai.toFixed(1)} · Disiplin ${Math.round(s.disc)} · Hadir ${Math.round(s.hadir)}%<br>${SUBJ.map(x=>x+': '+Math.round(clamp(s.nilai+((s.id*7+x.length*13)%13)-6))).join(' · ')}<br><b>Prestasi:</b> ${s.ach.join(', ')||'-'}</p><div class="row" style="margin-top:10px"><button class="btn s" data-a="x">Tutup</button></div>`)};
+A.movS=p=>{const s=sid(p),o=S.classes.filter(c=>c.open&&c.id!==s.cls&&stu(c.id).length<c.cap);if(!o.length)return toast('Tidak ada kelas tujuan yang tersedia');ask('Pindahkan '+s.name,[{k:'c',l:'Kelas tujuan',t:'select',o:o.map(c=>[c.id,c.name])}],v=>{s.cls=+v.c;s.role=''})};
+A.upS=p=>{const s=sid(p),r=promote(s);toast({ok:'Siswa naik kelas',lulus:'Siswa lulus! 🎓',tl:'Belum lulus (nilai < 55)',nc:'Belum ada kelas tingkat berikutnya yang tersedia'}[r])};
+A.delS=p=>{const s=sid(p);conf('Keluarkan '+s.name+' dari sekolah?',()=>{S.students=S.students.filter(x=>x!==s);fx({or:-2});note(s.name+' dikeluarkan')})};
+A.ketS=p=>{const s=sid(p);S.students.forEach(x=>{if(x.cls===s.cls&&x.role==='Ketua')x.role=''});s.role='Ketua';toast(s.name+' menjadi ketua kelas')};
+A.wakS=p=>{const s=sid(p);S.students.forEach(x=>{if(x.cls===s.cls&&x.role==='Wakil')x.role=''});s.role='Wakil';toast(s.name+' menjadi wakil ketua')};
+A.hire=()=>ask('Rekrut — pilih posisi',[{k:'p',l:'Posisi',t:'select',o:POS}],v=>{const[ty,n]=v.p.split(':');CAND=[0,1,2].map(()=>ty==='m'?mkT(n,'Guru Mata Pelajaran'):mkT('-',n));setTimeout(()=>modal(`<h2>Kandidat</h2>${CAND.map((t,i)=>`<div class="card" style="margin-bottom:8px">${t.av} <b>${t.name}</b> · ${t.age} th<br>Kemampuan ${t.skill} · Disiplin ${t.disc} · Gaji ${rp(t.sal)}<br><button class="btn" data-a="hr" data-p="${i}">Rekrut</button></div>`).join('')}<button class="btn s" data-a="x">Batal</button>`),0)},'Cari Kandidat');
+A.hr=i=>{const t=CAND[+i];S.teachers.push(t);toast(t.name+' direkrut');note(t.name+' bergabung sebagai '+t.role);close()};
+A.gaji=p=>{const t=T(+p);ask('Gaji '+t.name,[{k:'g',l:'Gaji bulanan (Rp)',t:'number',v:t.sal}],v=>{if(v.g<5e5){toast('Gaji terlalu kecil');return false}t.disc=clamp(t.disc+(v.g>t.sal?4:-6));t.sal=Math.round(v.g)})};
+A.jab=p=>{const t=T(+p),o=t.sub!=='-'?['Guru Mata Pelajaran','Wakil Kepala Sekolah']:['Guru BK','Kepala Tata Usaha','Petugas Kebersihan','Satpam'];ask('Jabatan '+t.name,[{k:'r',l:'Jabatan',t:'select',v:t.role,o:o.map(x=>[x,x])}],v=>{t.role=v.r})};
+A.tgl=p=>{const t=T(+p);t.act=!t.act;if(!t.act){slotsOut(t.id);S.classes.forEach(c=>{if(c.wali===t.id)c.wali=null})}};
+A.fire=p=>{const t=T(+p);conf('Pecat '+t.name+'? Pesangon '+rp(t.sal)+'.',()=>{tx('Pesangon '+t.name,-t.sal,'Gaji');delT(t.id);fx({hp:-1});note(t.name+' diberhentikan')})};
+A.auto=()=>{autoSch();toast('Jadwal disusun otomatis')};A.clrS=i=>{S.sch[+i]=blank()};
+A.slot=p=>{const[d,i]=p.split(':').map(Number),c=cls(selC),cur=sch(c.id)[d][i];ask(HARI[d]+' · '+JAM[i],[{k:'t',l:'Guru pengajar',t:'select',v:cur?cur.t:0,o:[[0,'(Kosong)'],...guruList().map(t=>[t.id,t.sub+' — '+t.name])]}],v=>{const t=T(+v.t);if(!t){sch(c.id)[d][i]=null;return}if(conflict(t.id,d,i,c.id)){toast('Guru sudah mengajar kelas lain di jam ini!');return false}sch(c.id)[d][i]={s:t.sub,t:t.id}})};
+A.tryout=()=>{if(!spend(2e6,'Try out','Kegiatan'))return;S.students.forEach(s=>s.nilai=clamp(s.nilai+1.5));toast('Try out selesai, nilai naik')};
+A.promAll=()=>conf('Naikkan semua siswa & luluskan kelas akhir sekarang?',()=>{const r=promAll();toast('Naik '+r.ok+', lulus '+r.lulus+', tinggal '+(r.tl+r.nc));note('Kenaikan massal: '+r.ok+' naik, '+r.lulus+' lulus')});
+A.bld=k=>{const F=FAC[k],f=S.fac[k],cost=k==='kelas'?F.c:F.c*(f.lv+1);if(!spend(cost,(f.lv?'Upgrade ':'Bangun ')+F.n,'Pembangunan'))return;S.build.push({k,left:k==='kelas'?F.d:F.d*(f.lv+1)});toast('Pembangunan '+F.n+' dimulai');note('Mulai membangun '+F.n)};
+A.rwt=k=>{if(spend(FAC[k].c*.08,'Perawatan '+FAC[k].n,'Perawatan')){S.fac[k].cond=100;toast('Fasilitas dirawat')}};
+A.fee=()=>ask('Biaya Pendidikan per Siswa/Bulan',[{k:'f',l:'Rupiah (50rb–1jt)',t:'number',v:S.fee}],v=>{const f=clamp(Math.round(v.f),5e4,1e6);if(f>S.fee)S.ortu=clamp(S.ortu-(f-S.fee)/1e4);S.fee=f;toast('Biaya pendidikan '+rp(f))});
+A.bos=()=>{if(S.day-S.cd.bos<30)return toast('Proposal baru bisa diajukan lagi dalam '+(30-S.day+S.cd.bos)+' hari');S.cd.bos=S.day;if(Math.random()<.3+S.rep/200){const m=rnd(10,30)*1e6;tx('Dana bantuan proposal',m,'Bantuan');toast('Proposal disetujui: '+rp(m))}else toast('Proposal ditolak')};
+A.rapat=()=>{if(!spend(5e5,'Rapat guru','Kegiatan'))return;S.teachers.forEach(t=>{t.disc=clamp(t.disc+3);t.skill=clamp(t.skill+1)});toast('Rapat guru selesai')};
+A.keg=()=>ask('Kegiatan Sekolah',[{k:'a',l:'Pilih kegiatan',t:'select',o:Object.keys(ACT).map(k=>[k,ACT[k].n+' — '+rp(ACT[k].c)])}],v=>{const a=ACT[v.a];if(!spend(a.c,a.n,'Kegiatan'))return false;fx({hp:a.hp,rep:a.rep,or:1});if(v.a==='lomba'){if(Math.random()<qual()/120){fx({rep:2});toast('🏅 Sekolah memenangkan lomba!');note('Sekolah memenangkan lomba akademik')}else toast('Belum menang, tetap semangat')}else toast(a.n+' terlaksana, siswa senang')});
+A.awG=()=>ask('Penghargaan Guru (Rp1 jt)',[{k:'t',l:'Guru',t:'select',o:guruList().map(t=>[t.id,t.name])}],v=>{const t=T(+v.t);if(!t||!spend(1e6,'Penghargaan guru','Kegiatan'))return false;t.skill=clamp(t.skill+2);t.disc=clamp(t.disc+8);fx({rep:.5});toast(t.name+' mendapat penghargaan')});
+A.awS=()=>ask('Penghargaan Siswa (Rp1 jt)',[{k:'s',l:'Siswa terbaik',t:'select',o:[...S.students].sort((a,b)=>b.nilai-a.nilai).slice(0,15).map(s=>[s.id,s.name+' ('+s.nilai.toFixed(0)+')'])}],v=>{const s=sid(v.s);if(!s||!spend(1e6,'Penghargaan siswa','Kegiatan'))return false;s.nilai=clamp(s.nilai+3);addA(s.id,'Penghargaan siswa teladan');fx({hp:1,rep:.3});toast(s.name+' mendapat penghargaan')});
+A.rule=k=>{S.rules[k]=!S.rules[k]};
+A.ren=k=>ask('Ubah nama',[{k:'v',l:k==='school'?'Nama sekolah':'Nama kepala sekolah',v:S[k]}],v=>{if(!v.v.trim())return false;S[k]=v.v.trim()});
+A.sndT=()=>{S.snd=!S.snd};A.save=()=>{save();toast('Game tersimpan')};
+A.load=()=>{const r=localStorage.getItem(K);if(!r)return toast('Belum ada data tersimpan');S=Object.assign({rules:{},cd:{bos:-99},day:0,ach:{}},JSON.parse(r));toast('Game dimuat')};
+A.reset=()=>conf('Reset semua progres? Tindakan ini tidak bisa dibatalkan.',()=>{localStorage.removeItem(K);newGame();toast('Game direset');setTimeout(A.tut,0)});
+A.tut=()=>modal(`<h2>Selamat datang, Kepala Sekolah!</h2><p style="line-height:1.7">1. <b>Dashboard</b>: pantau uang, reputasi, kebahagiaan, nilai.<br>2. Klik <b>Hari Berikutnya</b> atau biarkan waktu simulasi berjalan sendiri.<br>3. Terima siswa saat <b>PPDB (Juni)</b>, rekrut guru, dan susun <b>Jadwal</b> tiap kelas.<br>4. Bangun fasilitas di <b>Pembangunan</b> untuk menaikkan reputasi.<br>5. Jaga <b>Keuangan</b>: gaji dibayar tiap tanggal 1.<br>6. Ambil keputusan saat <b>Event</b> muncul, kejar <b>Achievement</b> & level kepsek.<br>Jam di pojok atas selalu mengikuti <b>WIB asli</b>.</p><button class="btn" data-a="tutok">Mulai Bermain</button>`);
+A.tutok=()=>{S.tut=false;close()};
+/* ===== MODE 3D ===== */
+P.d3=()=>`<div class="card"><h2>Jelajah Sekolah 3D</h2><p style="margin-bottom:12px">Jalan-jalan di gedung sekolahmu! Setiap kelas dan fasilitas yang sudah dibangun muncul lengkap dengan interiornya (meja, papan tulis, siswa, guru, dll). Gunakan analog di layar (HP) atau W A S D / panah (desktop). Tombol <b>Info</b> membuka detail ruangan tempatmu berdiri.</p><button class="btn y" data-a="en3">🏫 Masuk Mode 3D</button></div>`;
+A.en3=()=>{if(!window.THREE)return toast('Three.js belum termuat (perlu internet)');enter3D()};
+const FLO={kelas:'#e2e8f0',kosong:'#e2e8f0',perpus:'#fde68a',labkom:'#bfdbfe',labipa:'#bbf7d0',kantin:'#fed7aa',lapangan:'#4ade80',toilet:'#a5f3fc',guru:'#e2e8f0',kepsek:'#c4b5fd',uks:'#fecaca',musala:'#86efac',aula:'#fcd34d',tu:'#e2e8f0',bk:'#fbcfe8'};
+function FUR(R,P,L,fig){const t=R.t,f=(u,v,c,y)=>{const[x,z]=L(u,v);return fig(x,z,c,y||0)},W='#d6b98c';
+if(t==='kelas'){const r0=R.c.room;P(4,1.2,.1,4,.2,'#fff',0,1.7);P(1.6,.8,.7,4,1.4,'#8b5a2b',1);if(r0.proj)P(.5,.25,.5,4,4.5,'#111',0,2.5);if(r0.ac)P(1.2,.4,.3,1.5,.3,'#e2e8f0',0,2.3);
+let n=0;const ss=Math.min(12,stu(R.c.id).length);for(let r=0;r<3;r++)for(let c=0;c<4;c++){const u=1.3+c*1.8,v=3+r*1.6;P(.9,.75,.5,u,v,W,1);if(n++<ss)f(u,v+.6,pick(['#2563eb','#f59e0b','#ec4899','#10b981']),-.15)}
+if(T(R.c.wali))f(4,.9,'#16a34a')}
+else if(t==='kosong')P(.9,.75,.5,2,4,W,1);
+else if(t==='perpus'){for(let u=1;u<8;u+=1.5)P(1.1,2,.4,u,.4,'#a16207',1);P(2.2,.75,1,2.5,4.5,W,1);P(2.2,.75,1,5.5,4.5,W,1);f(2.5,5.4,'#8b5cf6',-.15)}
+else if(t==='labkom'){for(let r=0;r<2;r++)for(let c=0;c<3;c++){const u=1.5+c*2.5,v=2.5+r*3;P(2.2,.75,.8,u,v,'#cbd5e1',1);P(.6,.45,.06,u,v-.15,'#111',0,1.0)}}
+else if(t==='labipa'){for(let r=0;r<2;r++)for(let c=0;c<3;c++){const u=1.5+c*2.5,v=2.5+r*3;P(2.2,.9,1,u,v,'#e2e8f0',1);P(.25,.25,.25,u,v,'#22c55e',0,1.05)}}
+else if(t==='kantin'){P(6,1,.8,4,1,'#b45309',1);for(let c=0;c<3;c++)P(1.4,.75,1,1.5+c*2.5,5,W,1);f(4,.4,'#f97316')}
+else if(t==='lapangan'){P(.2,2.4,2.5,.3,4,'#fff',0);P(.2,2.4,2.5,7.7,4,'#fff',0);P(7,.03,.1,4,4,'#fff',0,.05)}
+else if(t==='toilet'){for(let c=0;c<4;c++)P(1.4,2,1.4,1+c*2,1.2,'#7dd3fc',1)}
+else if(t==='guru'){for(let r=0;r<2;r++)for(let c=0;c<3;c++)P(1.5,.75,.8,1.5+c*2.5,2.5+r*2.5,W,1);f(4,5.8,'#16a34a')}
+else if(t==='kepsek'){P(2.4,.8,1.1,4,2,'#5b3a1a',1);P(.7,1,.7,4,3.1,'#1d4ed8',0);P(3,.6,1,6.4,6.5,'#1d4ed8',1)}
+else if(t==='uks'){for(let c=0;c<3;c++){P(1.1,.5,2.2,1.5+c*2.5,2.5,'#fff',1);P(1.1,.15,1.2,1.5+c*2.5,3,'#60a5fa',0,.55)}}
+else if(t==='musala'){P(1.8,2.2,.2,4,.3,'#fde68a',0);for(let r=0;r<2;r++)for(let c=0;c<3;c++)P(.7,.03,1.3,2+c*2,3+r*2,'#16a34a',0,.05)}
+else if(t==='aula'){P(8,.5,2.5,4,1.3,'#7c2d12',1);for(let r=0;r<3;r++)for(let c=0;c<5;c++)P(.6,.5,.6,1+c*1.5,4+r*1.3,'#1d4ed8',0)}
+else if(t==='tu'){for(let c=0;c<3;c++)P(1.5,.75,.8,1.5+c*2.5,2.5,W,1);P(1,1.8,.5,7,.5,'#94a3b8',1);f(4,3.3,'#0ea5e9',-.15)}
+else if(t==='bk'){P(3,.6,1,3,2.2,'#f472b6',1);P(1.2,.5,.8,3,3.8,'#fde68a',1);P(1,.5,1,6.2,2,'#94a3b8',1);f(3,.8,'#16a34a')}}
+function enter3D(){const TH=THREE,el=document.createElement('div');el.id='w3';el.innerHTML='<div id="hud3"><b id="hr"></b><br><span class="clk-t"></span></div><button class="btn y" id="ex3">✖ Keluar</button><button class="btn" id="in3">Info</button><div id="jz"><i></i></div>';document.body.append(el);
+const ren=new TH.WebGLRenderer({antialias:true});ren.setPixelRatio(Math.min(devicePixelRatio,2));ren.setSize(innerWidth,innerHeight);el.prepend(ren.domElement);
+const sc=new TH.Scene(),cam=new TH.PerspectiveCamera(55,innerWidth/innerHeight,.1,200);sc.background=new TH.Color('#9fd0f5');sc.add(new TH.AmbientLight('#fff',.75));const dl=new TH.DirectionalLight('#fff',.6);dl.position.set(10,20,8);sc.add(dl);
+const walls=[],rooms=[],mat={},M=c=>mat[c]||(mat[c]=new TH.MeshLambertMaterial({color:c}));
+const box=(w,h,d,x,y,z,c)=>{const m=new TH.Mesh(new TH.BoxGeometry(w,h,d),M(c));m.position.set(x,y,z);sc.add(m);return m};
+const wall=(x1,z1,x2,z2)=>{const w={x1:Math.min(x1,x2)-.15,x2:Math.max(x1,x2)+.15,z1:Math.min(z1,z2)-.15,z2:Math.max(z1,z2)+.15};walls.push(w);box(w.x2-w.x1,2.8,w.z2-w.z1,(w.x1+w.x2)/2,1.4,(w.z1+w.z2)/2,'#f1f5f9')};
+const label=(t,w,h)=>{const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');g.fillStyle='#1d4ed8';g.fillRect(0,0,256,64);g.fillStyle='#fff';g.font='bold 26px sans-serif';g.textAlign='center';g.fillText(t,128,41);const s=new TH.Sprite(new TH.SpriteMaterial({map:new TH.CanvasTexture(c)}));s.scale.set(w,h,1);return s};
+const fig=(x,z,col,y=0)=>{const g=new TH.Group(),b=new TH.Mesh(new TH.CylinderGeometry(.2,.25,.7,10),M(col)),h=new TH.Mesh(new TH.SphereGeometry(.17,10,8),M('#f5c9a0')),n=new TH.Mesh(new TH.BoxGeometry(.1,.08,.12),M('#e0a070'));b.position.y=.55;h.position.y=1.05;n.position.set(0,1.05,.17);g.add(b,h,n);g.position.set(x,y,z);sc.add(g);return g};
+const list=[...S.classes.map(c=>({t:'kelas',c,n:'Kelas '+c.name})),...Array.from({length:Math.max(0,S.fac.kelas.lv-S.classes.length)},()=>({t:'kosong',n:'Ruang Kelas Kosong'})),...Object.keys(FAC).filter(k=>k!=='kelas'&&S.fac[k].lv>0).map(k=>({t:k,k,n:FAC[k].n}))].slice(0,40),cols=Math.ceil(list.length/2)||1;
+list.forEach((R,i)=>{const north=i%2===0,x0=(i>>1)*8,zb=north?-10.5:10.5,zf=north?-2.5:2.5;R.b={x1:x0,x2:x0+8,z1:Math.min(zb,zf),z2:Math.max(zb,zf)};rooms.push(R);
+const L=(u,v)=>[x0+u,north?zb+v:zb-v],P=(w,h,d,u,v,c,s,y)=>{const[x,z]=L(u,v),m=box(w,h,d,x,y??h/2,z,c);if(s)walls.push({x1:x-w/2,x2:x+w/2,z1:z-d/2,z2:z+d/2});return m};
+box(8,.05,8,x0+4,0,(zb+zf)/2,FLO[R.t]||'#e2e8f0');wall(x0,zb,x0+8,zb);wall(x0,zb,x0,zf);wall(x0+8,zb,x0+8,zf);wall(x0,zf,x0+2.8,zf);wall(x0+5.2,zf,x0+8,zf);
+const sp=label(R.n,3,.75);sp.position.set(x0+4,3.3,zf);sc.add(sp);FUR(R,P,L,fig)});
+if(list.length%2){const x0=(list.length>>1)*8;wall(x0,2.5,x0+8,2.5)}
+box(cols*8+4,.05,5,(cols*8-4)/2,0,0,'#cbd5e1');wall(cols*8,-2.5,cols*8,2.5);box(300,.1,300,0,-.08,0,'#86c46a');
+box(.15,7,.15,-5,3.5,-4,'#94a3b8');box(1.6,.45,.05,-4.2,6.7,-4,'#dc2626');box(1.6,.45,.05,-4.2,6.25,-4,'#fff');
+for(let i=0;i<14;i++){const x=rnd(-30,cols*8+30),z=pick([-1,1])*rnd(14,30);box(.4,2,.4,x,1,z,'#78350f');const s=new TH.Mesh(new TH.SphereGeometry(1.4,8,6),M('#15803d'));s.position.set(x,3.2,z);sc.add(s)}
+const sg=label(S.school.slice(0,22),6,1.5);sg.position.set(-3,3.5,0);sc.add(sg);
+let px=-6,pz=0,face=Math.PI/2,jx=0,jy=0,cur=null,raf,last=performance.now(),tt=0;const keys={},pl=fig(px,pz,'#1d4ed8'),nl=label(S.kepsek.slice(0,14),1.6,.4);nl.position.y=1.7;pl.add(nl);cam.position.set(px,9,pz+8);
+const jz=$('#jz'),kn=jz.firstChild;let jid=null;
+const jm=e=>{const r=jz.getBoundingClientRect(),dx=e.clientX-r.left-60,dy=e.clientY-r.top-60,d=Math.min(Math.hypot(dx,dy),50),a=Math.atan2(dy,dx);jx=Math.cos(a)*d/50;jy=Math.sin(a)*d/50;kn.style.transform=`translate(${jx*45}px,${jy*45}px)`};
+jz.onpointerdown=e=>{jid=e.pointerId;jz.setPointerCapture(jid);jm(e)};jz.onpointermove=e=>{if(e.pointerId===jid)jm(e)};jz.onpointerup=jz.onpointercancel=()=>{jid=null;jx=jy=0;kn.style.transform=''};
+const kd=e=>{keys[e.key.toLowerCase()]=1},ku=e=>{keys[e.key.toLowerCase()]=0},rs=()=>{ren.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()};
+addEventListener('keydown',kd);addEventListener('keyup',ku);addEventListener('resize',rs);
+const hit=(x,z)=>walls.some(w=>x+.3>w.x1&&x-.3<w.x2&&z+.3>w.z1&&z-.3<w.z2);
+$('#ex3').onclick=()=>{cancelAnimationFrame(raf);removeEventListener('keydown',kd);removeEventListener('keyup',ku);removeEventListener('resize',rs);ren.dispose();el.remove()};
+$('#in3').onclick=()=>{if(!cur)return toast('Masuk ke sebuah ruangan dulu');if(cur.c)A.detC(cur.c.id);else if(cur.k){const f=S.fac[cur.k];modal(`<h2>${cur.n}</h2><p style="margin-bottom:10px">Level ${f.lv} · Kondisi ${Math.round(f.cond)}%</p><div class="row"><button class="btn" data-a="rwt" data-p="${cur.k}">Rawat ${rp(FAC[cur.k].c*.08)}</button><button class="btn s" data-a="x">Tutup</button></div>`)}else toast('Ruang kosong. Buka kelas baru di Manajemen Kelas.')};
+function loop(now){raf=requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;
+let ix=jx+(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0),iy=jy+(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);const m=Math.hypot(ix,iy);
+if(m>.1){const k=Math.min(1,m),vx=ix/m*k*4.5*dt,vz=iy/m*k*4.5*dt;if(!hit(px+vx,pz))px+=vx;if(!hit(px,pz+vz))pz+=vz;face=Math.atan2(ix,iy)}
+px=clamp(px,-40,cols*8+40);pz=clamp(pz,-40,40);pl.position.set(px,m>.1?Math.abs(Math.sin(tt*10))*.06:0,pz);pl.rotation.y=face;
+cam.position.lerp(new TH.Vector3(px,9,pz+8),.12);cam.lookAt(px,0,pz);
+cur=rooms.find(r=>px>r.b.x1&&px<r.b.x2&&pz>r.b.z1&&pz<r.b.z2)||null;
+$('#hr').textContent=cur?cur.n+(cur.c?' · '+stu(cur.c.id).length+'/'+cur.c.cap+' siswa':''):(Math.abs(pz)<2.5&&px>0?'Koridor':'Halaman sekolah');
+ren.render(sc,cam)}
+clock();raf=requestAnimationFrame(loop)}
+/* ===== CORE ===== */
+function render(){$('#nav').innerHTML=MENU.map(m=>`<div class="nv ${m[0]===page?'on':''}" data-a="go" data-p="${m[0]}"><i data-lucide="${m[2]}"></i>${m[1]}</div>`).join('');$('#ttl').textContent=MENU.find(m=>m[0]===page)[1];$('#pg').innerHTML=P[page]();icons();clock()}
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!A[b.dataset.a])return;snd();A[b.dataset.a](b.dataset.p,b);if(b.dataset.a!=='menu'){chkAch();render();save()}});
+document.addEventListener('change',e=>{const k=e.target.dataset.ch;if(!k)return;const v=e.target.value;if(k==='fC')fC=v;else if(k==='selC')selC=+v;else if(k==='spd')S.spd=+v;render();save()});
+function tick(){clock();if(S.spd&&!S.pend&&$('#mod').style.display!=='flex'&&!document.hidden&&++acc>=S.spd){acc=0;nextDay();chkAch();render();save()}}
+(function(){try{const r=localStorage.getItem(K);if(r)S=Object.assign({rules:{},cd:{bos:-99},day:0,ach:{}},JSON.parse(r));else newGame()}catch(e){newGame()}
+render();if(S.tut)A.tut();else if(S.pend)showEv();setInterval(tick,1000);setInterval(save,15000)})();
+</script></body></html>
