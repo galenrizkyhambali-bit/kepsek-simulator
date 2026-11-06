@@ -93,7 +93,7 @@ function mkT(sub,role){const g=Math.random()<.5?'L':'P',sk=rnd(50,85),av={'Petug
 function mkS(c){return{id:uid(),name:nm(),g:Math.random()<.5?'L':'P',cls:c,nilai:rnd(60,82),disc:rnd(60,92),hadir:rnd(90,99),role:'',ach:[]}}
 function mkC(n,lv,cap){const c={id:uid(),name:n,lv,cap,open:true,wali:null,room:{no:101+S.rc++,ac:0,proj:0,board:0,light:0,clean:90,cond:100}};S.classes.push(c);return c}
 const blank=()=>Array.from({length:5},()=>Array(6).fill(null)),sch=id=>S.sch[id]||(S.sch[id]=blank());
-function newGame(){S={school:'SMP Harapan Bangsa',kepsek:'Kepala Sekolah',money:1e8,rep:50,happy:75,ortu:70,fee:150000,date:'2026-07-13',nid:1,rc:0,day:0,classes:[],students:[],teachers:[],sch:{},fac:{},build:[],tx:[],fin:[],log:[],ach:{},pool:6,tunj:true,snd:true,spd:20,tut:true,pend:null,cd:{bos:-99},rules:{},lulus:0,lv:1};
+function newGame(){S={school:'SMP Harapan Bangsa',kepsek:'Kepala Sekolah',money:1e12,rep:50,happy:75,ortu:70,fee:150000,date:'2026-07-13',nid:1,rc:0,day:0,classes:[],students:[],teachers:[],sch:{},fac:{},build:[],tx:[],fin:[],log:[],ach:{},pool:6,tunj:true,snd:true,spd:20,tut:true,pend:null,cd:{bos:-99},rules:{},lulus:0,lv:1};
 for(const k in FAC)S.fac[k]={lv:0,cond:100};Object.assign(S.fac.kelas,{lv:3});['toilet','guru','kepsek','tu'].forEach(k=>S.fac[k].lv=1);
 ['Matematika','Bahasa Indonesia','Bahasa Inggris','IPA','IPS'].forEach(s=>S.teachers.push(mkT(s,'Guru Mata Pelajaran')));
 ['Petugas Kebersihan','Satpam','Kepala Tata Usaha'].forEach(r=>S.teachers.push(mkT('-',r)));
